@@ -1,8 +1,13 @@
+import os
 import streamlit as st
 import google.generativeai as genai
 
-# Set up your API key here
-api_key = 'AIzaSyDZAM2I9feua7e54H_v071RKXZjgQTwqNg'
+# Set up your API key using environment variables for better security
+api_key = os.getenv('GOOGLE_API_KEY')
+if not api_key:
+    st.error("API Key not set. Please set your GOOGLE_API_KEY environment variable.")
+    st.stop()
+
 genai.configure(api_key=api_key)
 model = genai.GenerativeModel("gemini-pro")
 
@@ -13,8 +18,11 @@ def generate_content_with_gemini(prompt_text):
         "parts": [{"text": prompt_text}],
         # Add other keys like 'max_length' if needed by the API
     }
-    response = model.generate_content(request_content)
-    return response.text
+    try:
+        response = model.generate_content(request_content)
+        return response.text
+    except Exception as e:
+        return f"An error occurred: {str(e)}"
 
 
 # Set page config to wide mode for better spacing
@@ -81,7 +89,7 @@ with st.sidebar:
         special_considerations = st.text_area(
             "Any special considerations?",
             help="Let us know if you have any injuries or preferences."
-        )
+        ).strip()
         submit_button = st.form_submit_button(label='Generate Yoga Flow')
 
 # Main area for title and generated yoga flow
